@@ -4,6 +4,12 @@ const port = 4000
 const path = require('path');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const mongoose = require('mongoose');
+
+// Link to MongoDB
+const mongoDB = 'mongodb+srv://admin:admin@lab7mongodb-viljb.mongodb.net/test?retryWrites=true&w=majority';
+
+mongoose.connect(mongoDB, {useNewUrlParser:true});
 
 app.use(cors());
 
@@ -22,6 +28,17 @@ app.use(bodyParser.urlencoded({ extended: false }))
 // parse application/json
 app.use(bodyParser.json())
 
+// Schema Var as a mongoose 
+const Schema = mongoose.Schema;
+
+// Schema with 3 fields
+const monvieSchema = new Schema({
+    title:String,
+    year:String,
+    poster:String
+})
+
+const MovieModel = mongoose.model('movie', monvieSchema);
 
 app.get('/', (req, res) => res.send('Hello World!'))
 
@@ -51,29 +68,48 @@ app.post('/api/movies', (req, res) => {
     console.log(req.body.title);
     console.log(req.body.year);
     console.log(req.body.poster);
+
+    // Must be in app.post
+    MovieModel.create({
+        title: req.body.title,
+        year: req.body.year,
+        poster: req.body.poster
+    });
+
     res.json('Data Uploaded');
+})
+
+app.get('/api/movies/:id', (req, res) => {
+    console.log(req.params.id);
+
+    MovieModel.findById(req.params.id, (error, data) =>{
+        res.json(data);
+    })
 })
 
 app.get('/api/movies', (req, res) => {
 
-    const myMovies = [
-        {
-            "Title": "Avengers: Infinity War",
-            "Year": "2018",
-            "Poster": "https://m.media-amazon.com/images/M/MV5BMjMxNjY2MDU1OV5BMl5BanBnXkFtZTgwNzY1MTUwNTM@._V1_SX300.jpg"
-        },
-        {
-            "Title": "Captain America: Civil War",
-            "Year": "2016",
-            "Poster": "https://m.media-amazon.com/images/M/MV5BMjQ0MTgyNjAxMV5BMl5BanBnXkFtZTgwNjUzMDkyODE@._V1_SX300.jpg"
-        }
-    ];
+    MovieModel.find((error, data)=>{
+        res.json({movies:data});
+    })
+    // const myMovies = [
+    //     {
+    //         "Title": "Avengers: Infinity War",
+    //         "Year": "2018",
+    //         "Poster": "https://m.media-amazon.com/images/M/MV5BMjMxNjY2MDU1OV5BMl5BanBnXkFtZTgwNzY1MTUwNTM@._V1_SX300.jpg"
+    //     },
+    //     {
+    //         "Title": "Captain America: Civil War",
+    //         "Year": "2016",
+    //         "Poster": "https://m.media-amazon.com/images/M/MV5BMjQ0MTgyNjAxMV5BMl5BanBnXkFtZTgwNjUzMDkyODE@._V1_SX300.jpg"
+    //     }
+    // ];
 
-    res.status(200).json(
-        {
-            movies: myMovies,
-            message: 'Data Sent'
-        });
+    // res.status(200).json(
+    //     {
+    //         movies: myMovies,
+    //         message: 'Data Sent'
+    //     });
 })
 
 app.get('/hello/:name', (req, res) => {
